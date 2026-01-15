@@ -88,8 +88,8 @@ const splitNodes = [
 export default function Home() {
   return (
     <div className="relative isolate min-h-screen bg-white">
-      <div className="mx-auto flex max-w-7xl gap-6 px-4 py-10 lg:px-6 lg:py-14">
-        <aside className="sticky top-8 hidden h-fit w-60 flex-col border border-slate-200 bg-white p-4 shadow-sm lg:flex">
+      <div className="mx-auto flex min-h-screen max-w-7xl gap-6 px-4 py-10 lg:px-6 lg:py-14">
+        <aside className="sticky top-0 hidden min-h-screen w-60 flex-col border border-slate-200 bg-white p-4 shadow-sm lg:flex">
           <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
             <Image
               src="/logo_holoplax.png"
@@ -106,10 +106,11 @@ export default function Home() {
               </p>
             </div>
           </div>
-          <div className="mt-4 flex flex-col gap-1">
+          <nav className="mt-4 flex flex-col gap-1">
             {navItems.map((item) => (
-              <button
+              <a
                 key={item.label}
+                href={`#${item.label}`}
                 className={`flex items-center gap-2 px-3 py-2 text-sm transition hover:bg-[#2323eb]/10 ${
                   item.active
                     ? "border border-[#2323eb]/40 bg-[#2323eb]/10 text-[#2323eb]"
@@ -118,49 +119,42 @@ export default function Home() {
               >
                 <item.icon size={16} />
                 <span>{item.label}</span>
-              </button>
+              </a>
             ))}
-          </div>
-          <div className="mt-4 border-t border-slate-200 pt-4 text-xs text-slate-600">
+          </nav>
+          <div className="mt-auto border-t border-slate-200 pt-4 text-xs text-slate-600">
             スプリント上限 <span className="font-semibold">{splitThreshold}pt</span>
           </div>
         </aside>
 
         <div className="relative flex flex-1 flex-col gap-10">
-          <div className="absolute right-0 top-0 flex items-center border border-slate-200 bg-white px-4 py-4 shadow-sm">
-            <Image
-              src="/logo_holoplax.png"
-              alt="Holoplax logo"
-              width={96}
-              height={96}
-              priority
-            />
-          </div>
-
-          <header className="mt-28 flex flex-col gap-6 border border-slate-200 bg-white p-6 shadow-sm lg:mt-0 lg:flex-row lg:items-center lg:justify-between">
+          <header
+            id="ダッシュボード"
+            className="flex flex-col gap-6 border border-slate-200 bg-white p-6 shadow-sm lg:flex-row lg:items-center lg:justify-between"
+          >
             <div className="flex flex-col gap-2">
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
                 Agile OS for life work
               </p>
-            <h1 className="text-4xl font-semibold leading-tight text-slate-900 sm:text-5xl">
-              スプリント思考で人生タスクをさばく
-            </h1>
-            <p className="max-w-2xl text-base text-slate-600">
-              バックログを自動で溜めて、オンボーディングでキャパ（ベロシティ）を決め、
-              AIが点数を見て自動ハンドリング or 分解提案。あなたは本質に集中。
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3 text-sm font-medium">
-            <button className="bg-[#2323eb] px-4 py-2 text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md hover:shadow-[#2323eb]/30">
-              スプリントを始める
-            </button>
-            <button className="border border-slate-200 bg-slate-50 px-4 py-2 text-slate-700 transition hover:border-[#2323eb]/60 hover:text-[#2323eb]">
-              MinIO + Docker を設定
-            </button>
-          </div>
-        </header>
+              <h1 className="text-4xl font-semibold leading-tight text-slate-900 sm:text-5xl">
+                スプリント思考で人生タスクをさばく
+              </h1>
+              <p className="max-w-2xl text-base text-slate-600">
+                バックログを自動で溜めて、オンボーディングでキャパ（ベロシティ）を決め、
+                AIが点数を見て自動ハンドリング or 分解提案。あなたは本質に集中。
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3 text-sm font-medium">
+              <button className="bg-[#2323eb] px-4 py-2 text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md hover:shadow-[#2323eb]/30">
+                スプリントを始める
+              </button>
+              <button className="border border-slate-200 bg-slate-50 px-4 py-2 text-slate-700 transition hover:border-[#2323eb]/60 hover:text-[#2323eb]">
+                MinIO + Docker を設定
+              </button>
+            </div>
+          </header>
 
-        <section className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
+        <section id="バックログ" className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
           <div className="border border-slate-200 bg-white p-8 shadow-sm">
             <div className="mb-6 flex items-center gap-3 text-sm text-slate-600">
               <span className="bg-[#2323eb]/10 px-3 py-1 font-medium text-[#2323eb]">
@@ -247,7 +241,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+        <section id="スプリント" className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
           <div className="border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-slate-900">Core screens</h3>
@@ -384,7 +378,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="border border-slate-200 bg-white p-6 shadow-sm">
+        <section id="自動化" className="border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-slate-900">タスク分解（Git風ツリー）</h3>
@@ -444,8 +438,65 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <section id="ベロシティ" className="border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900">ベロシティと予測</h3>
+              <p className="text-sm text-slate-600">
+                過去スプリントのポイント履歴とレンジを表示（モック）。
+              </p>
+            </div>
+            <span className="border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700">
+              coming soon
+            </span>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            {["Sprint-10", "Sprint-11", "Sprint-12"].map((sprint) => (
+              <div
+                key={sprint}
+                className="border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800"
+              >
+                <p className="text-slate-500">{sprint}</p>
+                <p className="text-2xl font-semibold text-slate-900">22 pt</p>
+                <p className="text-xs text-slate-500">レンジ: 20-26</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section id="設定" className="border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900">設定・ポリシー</h3>
+              <p className="text-sm text-slate-600">
+                AI実行としきい値、通知、ストレージの設定（モック）。
+              </p>
+            </div>
+            <span className="border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700">
+              config
+            </span>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800">
+              <p className="text-slate-500">AI しきい値</p>
+              <p className="mt-1 font-semibold text-slate-900">{splitThreshold} pt</p>
+              <p className="text-xs text-slate-600">超過で分解提案</p>
+            </div>
+            <div className="border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800">
+              <p className="text-slate-500">通知</p>
+              <p className="mt-1 font-semibold text-slate-900">オフ</p>
+              <p className="text-xs text-slate-600">MVPでは通知なし</p>
+            </div>
+            <div className="border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800">
+              <p className="text-slate-500">ストレージ</p>
+              <p className="mt-1 font-semibold text-slate-900">MinIO (S3)</p>
+              <p className="text-xs text-slate-600">docker-compose で起動</p>
+            </div>
+          </div>
+        </section>
+        </div>
       </div>
-    </div>
     </div>
   );
 }
