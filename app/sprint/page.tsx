@@ -1,34 +1,57 @@
- "use client";
+"use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Sidebar } from "../components/sidebar";
 
+type Task = { id: string; title: string; points: number; status: string; urgency: string; risk: string };
+
 export default function SprintPage() {
-  const [items, setItems] = useState([
-    { title: "自動化ルールの整理", points: 5, status: "Planned" },
-    { title: "分解UIの調整", points: 3, status: "Planned" },
-    { title: "ベロシティカードの実データ接続", points: 2, status: "Ready" },
-  ]);
-  const [newItem, setNewItem] = useState({ title: "", points: 1 });
   const capacity = 24;
+  const [items, setItems] = useState<Task[]>([]);
+  const [newItem, setNewItem] = useState({ title: "", points: 1 });
+
+  const fetchTasks = useCallback(async () => {
+    const res = await fetch("/api/tasks");
+    const data = await res.json();
+    setItems((data.tasks ?? []).filter((t: Task) => t.status !== "backlog"));
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchTasks();
+  }, [fetchTasks]);
+
   const used = useMemo(
-    () => items.filter((i) => i.status !== "Done").reduce((sum, i) => sum + i.points, 0),
+    () => items.filter((i) => i.status !== "done").reduce((sum, i) => sum + i.points, 0),
     [items],
   );
   const remaining = capacity - used;
 
-  const addItem = () => {
+  const addItem = async () => {
     if (!newItem.title.trim() || newItem.points <= 0) return;
     if (newItem.points > remaining) return;
-    setItems((prev) => [
-      ...prev,
-      { title: newItem.title.trim(), points: Number(newItem.points), status: "Planned" },
-    ]);
+    await fetch("/api/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: newItem.title.trim(),
+        points: Number(newItem.points),
+        urgency: "中",
+        risk: "中",
+        status: "sprint",
+      }),
+    });
     setNewItem({ title: "", points: 1 });
+    fetchTasks();
   };
 
-  const markDone = (title: string) => {
-    setItems((prev) => prev.map((i) => (i.title === title ? { ...i, status: "Done" } : i)));
+  const markDone = async (id: string) => {
+    await fetch(`/api/tasks/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "done" }),
+    });
+    fetchTasks();
   };
 
   return (
@@ -91,7 +114,7 @@ export default function SprintPage() {
           <div className="grid gap-3">
             {items.map((item) => (
               <div
-                key={item.title}
+                key={item.id}
                 className="flex items-center justify-between border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800"
               >
                 <div>
@@ -103,7 +126,7 @@ export default function SprintPage() {
                     {item.points} pt
                   </span>
                   <button
-                    onClick={() => markDone(item.title)}
+                    onClick={() => markDone(item.id)}
                     className="border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 transition hover:border-[#2323eb]/50 hover:text-[#2323eb]"
                   >
                     完了
