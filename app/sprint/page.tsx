@@ -1,12 +1,36 @@
+ "use client";
+
+import { useMemo, useState } from "react";
 import { Sidebar } from "../components/sidebar";
 
-const sprintItems = [
-  { title: "自動化ルールの整理", points: 5, status: "Planned" },
-  { title: "分解UIの調整", points: 3, status: "Planned" },
-  { title: "ベロシティカードの実データ接続", points: 2, status: "Ready" },
-];
-
 export default function SprintPage() {
+  const [items, setItems] = useState([
+    { title: "自動化ルールの整理", points: 5, status: "Planned" },
+    { title: "分解UIの調整", points: 3, status: "Planned" },
+    { title: "ベロシティカードの実データ接続", points: 2, status: "Ready" },
+  ]);
+  const [newItem, setNewItem] = useState({ title: "", points: 1 });
+  const capacity = 24;
+  const used = useMemo(
+    () => items.filter((i) => i.status !== "Done").reduce((sum, i) => sum + i.points, 0),
+    [items],
+  );
+  const remaining = capacity - used;
+
+  const addItem = () => {
+    if (!newItem.title.trim() || newItem.points <= 0) return;
+    if (newItem.points > remaining) return;
+    setItems((prev) => [
+      ...prev,
+      { title: newItem.title.trim(), points: Number(newItem.points), status: "Planned" },
+    ]);
+    setNewItem({ title: "", points: 1 });
+  };
+
+  const markDone = (title: string) => {
+    setItems((prev) => prev.map((i) => (i.title === title ? { ...i, status: "Done" } : i)));
+  };
+
   return (
     <div className="mx-auto flex min-h-screen max-w-7xl gap-6 px-4 py-10 lg:px-6 lg:py-14">
       <Sidebar splitThreshold={8} />
@@ -26,6 +50,9 @@ export default function SprintPage() {
               <span className="border border-slate-200 bg-slate-50 px-3 py-1 text-slate-700">
                 キャパ 24 pt
               </span>
+              <span className="border border-slate-200 bg-slate-50 px-3 py-1 text-slate-700">
+                残り {remaining} pt
+              </span>
               <button className="bg-[#2323eb] px-4 py-2 text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md hover:shadow-[#2323eb]/30">
                 スプリント開始
               </button>
@@ -34,8 +61,35 @@ export default function SprintPage() {
         </header>
 
         <section className="border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
+            <input
+              value={newItem.title}
+              onChange={(e) => setNewItem((p) => ({ ...p, title: e.target.value }))}
+              placeholder="タスク名"
+              className="w-full border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none focus:border-[#2323eb]"
+            />
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={1}
+                value={newItem.points}
+                onChange={(e) => setNewItem((p) => ({ ...p, points: Number(e.target.value) || 0 }))}
+                className="w-24 border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none focus:border-[#2323eb]"
+              />
+              <button
+                onClick={addItem}
+                disabled={newItem.points > remaining}
+                className="border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 transition hover:border-[#2323eb]/50 hover:text-[#2323eb] disabled:opacity-50"
+              >
+                追加
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section className="border border-slate-200 bg-white p-6 shadow-sm">
           <div className="grid gap-3">
-            {sprintItems.map((item) => (
+            {items.map((item) => (
               <div
                 key={item.title}
                 className="flex items-center justify-between border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800"
@@ -48,8 +102,11 @@ export default function SprintPage() {
                   <span className="border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700">
                     {item.points} pt
                   </span>
-                  <button className="border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 transition hover:border-[#2323eb]/50 hover:text-[#2323eb]">
-                    外す
+                  <button
+                    onClick={() => markDone(item.title)}
+                    className="border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 transition hover:border-[#2323eb]/50 hover:text-[#2323eb]"
+                  >
+                    完了
                   </button>
                 </div>
               </div>

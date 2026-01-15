@@ -1,3 +1,5 @@
+ "use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -8,6 +10,7 @@ import {
   Settings,
   Zap,
 } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export const navItems = [
   { label: "ダッシュボード", href: "/", icon: LayoutDashboard },
@@ -23,6 +26,7 @@ type SidebarProps = {
 };
 
 export function Sidebar({ splitThreshold }: SidebarProps) {
+  const pathname = usePathname();
   return (
     <aside className="sticky top-0 hidden min-h-screen w-60 flex-col border border-slate-200 bg-white p-4 shadow-sm lg:flex">
       <div className="border-b border-slate-200 pb-4">
@@ -40,7 +44,11 @@ export function Sidebar({ splitThreshold }: SidebarProps) {
           <Link
             key={item.label}
             href={item.href}
-            className="flex items-center gap-2 border border-transparent px-3 py-2 text-sm text-slate-700 transition hover:border-[#2323eb]/40 hover:bg-[#2323eb]/10 hover:text-[#2323eb]"
+            className={`flex items-center gap-2 border px-3 py-2 text-sm transition hover:border-[#2323eb]/40 hover:bg-[#2323eb]/10 hover:text-[#2323eb] ${
+              pathname === item.href
+                ? "border-[#2323eb]/40 bg-[#2323eb]/10 text-[#2323eb]"
+                : "border-transparent text-slate-700"
+            }`}
           >
             <item.icon size={16} />
             <span>{item.label}</span>

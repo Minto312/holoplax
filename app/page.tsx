@@ -1,5 +1,6 @@
 import { Settings } from "lucide-react";
 import { Sidebar } from "./components/sidebar";
+import { TaskSplitTree } from "./components/task-split-tree";
 
 const screenMap = [
   {
@@ -344,47 +345,7 @@ export default function Home() {
               </button>
             </div>
           </div>
-          <div className="relative mt-6 pl-8">
-            <div className="absolute left-3 top-0 bottom-0 border-l border-slate-200" />
-            <div className="space-y-4">
-              {splitNodes.map((node, idx) => (
-                <div key={node.id} className="relative">
-                  <div className="absolute left-[9px] top-3 h-0.5 w-4 bg-slate-300" />
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-7 w-7 items-center justify-center bg-[#2323eb]/10 text-xs font-semibold text-[#2323eb]">
-                      {node.points}
-                    </div>
-                    <div className="flex-1 border border-slate-200 bg-slate-50 px-4 py-3">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-semibold text-slate-900">
-                          {node.title}
-                        </p>
-                        <div className="flex items-center gap-2 text-xs">
-                          <span className="border border-slate-200 bg-white px-2 py-1 text-slate-700">
-                            緊急度: {node.urgency}
-                          </span>
-                          <span className="border border-slate-200 bg-white px-2 py-1 text-slate-700">
-                            リスク: {node.risk}
-                          </span>
-                        </div>
-                      </div>
-                      <p className="mt-2 text-sm text-slate-700">{node.detail}</p>
-                      {idx === 0 ? (
-                        <div className="mt-3 flex items-center gap-2 text-xs">
-                          <span className="border border-[#2323eb]/40 bg-[#2323eb]/10 px-2 py-1 text-[#2323eb]">
-                            分解提案
-                          </span>
-                          <span className="text-slate-600">
-                            上限 {splitThreshold}pt を超過したため分解候補を生成
-                          </span>
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <TaskSplitTree nodes={splitNodes} splitThreshold={splitThreshold} />
         </section>
 
         <section id="ベロシティ" className="border border-slate-200 bg-white p-6 shadow-sm">

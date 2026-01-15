@@ -1,12 +1,16 @@
+ "use client";
+
+import { useState } from "react";
 import { Sidebar } from "../components/sidebar";
 
-const rules = [
-  { name: "低スコア自動委任", range: "< 35", status: "On" },
-  { name: "中スコア分解提案", range: "35-70", status: "On" },
-  { name: "高スコア分割必須", range: "> 70", status: "On" },
-];
-
 export default function AutomationPage() {
+  const [thresholds, setThresholds] = useState({ low: 35, high: 70 });
+  const rules = [
+    { name: "低スコア自動委任", range: `< ${thresholds.low}`, status: "On" },
+    { name: "中スコア分解提案", range: `${thresholds.low}-${thresholds.high}`, status: "On" },
+    { name: "高スコア分割必須", range: `> ${thresholds.high}`, status: "On" },
+  ];
+
   return (
     <div className="mx-auto flex min-h-screen max-w-7xl gap-6 px-4 py-10 lg:px-6 lg:py-14">
       <Sidebar splitThreshold={8} />
@@ -22,9 +26,23 @@ export default function AutomationPage() {
                 スコアしきい値ごとの挙動を管理（モック）。MVPでは固定ルール。
               </p>
             </div>
-            <button className="border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-700 transition hover:border-[#2323eb]/60 hover:text-[#2323eb]">
-              しきい値を編集
-            </button>
+            <div className="flex items-center gap-2 text-sm">
+              <input
+                type="number"
+                value={thresholds.low}
+                onChange={(e) => setThresholds((p) => ({ ...p, low: Number(e.target.value) || 0 }))}
+                className="w-20 border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-[#2323eb]"
+              />
+              <input
+                type="number"
+                value={thresholds.high}
+                onChange={(e) => setThresholds((p) => ({ ...p, high: Number(e.target.value) || 0 }))}
+                className="w-20 border border-slate-200 px-3 py-2 text-slate-800 outline-none focus:border-[#2323eb]"
+              />
+              <span className="border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+                即時反映
+              </span>
+            </div>
           </div>
         </header>
 

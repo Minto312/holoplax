@@ -1,12 +1,28 @@
+ "use client";
+
+import { useState } from "react";
 import { Sidebar } from "../components/sidebar";
 
-const velocityHistory = [
-  { name: "Sprint-10", points: 22, range: "20-26" },
-  { name: "Sprint-11", points: 24, range: "21-27" },
-  { name: "Sprint-12", points: 23, range: "21-25" },
-];
-
 export default function VelocityPage() {
+  const [history, setHistory] = useState([
+    { name: "Sprint-10", points: 22, range: "20-26" },
+    { name: "Sprint-11", points: 24, range: "21-27" },
+    { name: "Sprint-12", points: 23, range: "21-25" },
+  ]);
+  const [form, setForm] = useState({ name: "Sprint-13", points: 22, range: "20-26" });
+
+  const addEntry = () => {
+    if (!form.name.trim()) return;
+    setHistory((prev) => [...prev, { ...form, name: form.name.trim() }]);
+    setForm((p) => ({ ...p, name: `Sprint-${prevNumber(p.name) + 1}` }));
+  };
+
+  const prevNumber = (name: string) => {
+    const match = name.match(/(\d+)/);
+    if (!match) return history.length;
+    return Number(match[1]);
+  };
+
   return (
     <div className="mx-auto flex min-h-screen max-w-7xl gap-6 px-4 py-10 lg:px-6 lg:py-14">
       <Sidebar splitThreshold={8} />
@@ -30,7 +46,7 @@ export default function VelocityPage() {
 
         <section className="border border-slate-200 bg-white p-6 shadow-sm">
           <div className="grid gap-3 sm:grid-cols-3">
-            {velocityHistory.map((item) => (
+            {history.map((item) => (
               <div
                 key={item.name}
                 className="border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800"
@@ -40,6 +56,33 @@ export default function VelocityPage() {
                 <p className="text-xs text-slate-500">レンジ: {item.range}</p>
               </div>
             ))}
+          </div>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-4">
+            <input
+              value={form.name}
+              onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+              className="w-full border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none focus:border-[#2323eb]"
+              placeholder="Sprint-13"
+            />
+            <input
+              type="number"
+              value={form.points}
+              onChange={(e) => setForm((p) => ({ ...p, points: Number(e.target.value) || 0 }))}
+              className="w-full border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none focus:border-[#2323eb]"
+            />
+            <input
+              value={form.range}
+              onChange={(e) => setForm((p) => ({ ...p, range: e.target.value }))}
+              className="w-full border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none focus:border-[#2323eb]"
+              placeholder="20-26"
+            />
+            <button
+              onClick={addEntry}
+              className="border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 transition hover:border-[#2323eb]/60 hover:text-[#2323eb]"
+            >
+              追加
+            </button>
           </div>
         </section>
       </main>
