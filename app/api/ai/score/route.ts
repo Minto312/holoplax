@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { AuthError, requireUserId } from "../../../../lib/api-auth";
 import prisma from "../../../../lib/prisma";
 
 const fallbackEstimate = (title: string, description: string) => {
@@ -21,6 +22,7 @@ const extractJson = (text: string) => {
 
 export async function POST(request: Request) {
   try {
+    const userId = await requireUserId();
     const body = await request.json();
     const title = String(body.title ?? "").trim();
     const description = String(body.description ?? "").trim();
@@ -75,11 +77,15 @@ export async function POST(request: Request) {
         inputTitle: title,
         inputDescription: description,
         output: JSON.stringify(payload),
+        userId,
       },
     });
 
     return NextResponse.json(payload);
   } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    }
     console.error("POST /api/ai/score error", error);
     return NextResponse.json({ error: "failed to estimate score" }, { status: 500 });
   }

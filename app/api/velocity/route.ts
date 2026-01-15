@@ -1,25 +1,46 @@
 import { NextResponse } from "next/server";
+import { AuthError, requireUserId } from "../../../lib/api-auth";
 import prisma from "../../../lib/prisma";
+import { adoptOrphanVelocity } from "../../../lib/user-data";
 
 export async function GET() {
-  const velocity = await prisma.velocityEntry.findMany({
-    orderBy: { createdAt: "desc" },
-  });
-  return NextResponse.json({ velocity });
+  try {
+    const userId = await requireUserId();
+    await adoptOrphanVelocity(userId);
+    const velocity = await prisma.velocityEntry.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+    });
+    return NextResponse.json({ velocity });
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    }
+    throw error;
+  }
 }
 
 export async function POST(request: Request) {
-  const body = await request.json();
-  const { name, points, range } = body;
-  if (!name || !points || !range) {
-    return NextResponse.json({ error: "name, points, range are required" }, { status: 400 });
+  try {
+    const userId = await requireUserId();
+    const body = await request.json();
+    const { name, points, range } = body;
+    if (!name || !points || !range) {
+      return NextResponse.json({ error: "name, points, range are required" }, { status: 400 });
+    }
+    const entry = await prisma.velocityEntry.create({
+      data: {
+        name,
+        points: Number(points),
+        range,
+        userId,
+      },
+    });
+    return NextResponse.json({ entry });
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    }
+    throw error;
   }
-  const entry = await prisma.velocityEntry.create({
-    data: {
-      name,
-      points: Number(points),
-      range,
-    },
-  });
-  return NextResponse.json({ entry });
 }

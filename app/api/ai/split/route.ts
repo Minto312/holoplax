@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { AuthError, requireUserId } from "../../../../lib/api-auth";
 import prisma from "../../../../lib/prisma";
 
 type SplitItem = {
@@ -32,6 +33,7 @@ const extractJsonArray = (text: string) => {
 
 export async function POST(request: Request) {
   try {
+    const userId = await requireUserId();
     const body = await request.json();
     const title = String(body.title ?? "").trim();
     const description = String(body.description ?? "").trim();
@@ -87,11 +89,15 @@ export async function POST(request: Request) {
         inputTitle: title,
         inputDescription: description,
         output: JSON.stringify(suggestions),
+        userId,
       },
     });
 
     return NextResponse.json({ suggestions });
   } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    }
     console.error("POST /api/ai/split error", error);
     return NextResponse.json({ error: "failed to split task" }, { status: 500 });
   }

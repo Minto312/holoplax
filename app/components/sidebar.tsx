@@ -10,6 +10,7 @@ import {
   Settings,
   Zap,
 } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 
 export const navItems = [
@@ -28,6 +29,7 @@ type SidebarProps = {
 
 export function Sidebar({ splitThreshold }: SidebarProps) {
   const pathname = usePathname();
+  const { data: session } = useSession();
   return (
     <aside className="sticky top-0 hidden min-h-screen w-60 flex-col border border-slate-200 bg-white p-4 shadow-sm lg:flex">
       <div className="border-b border-slate-200 pb-4">
@@ -56,7 +58,29 @@ export function Sidebar({ splitThreshold }: SidebarProps) {
           </Link>
         ))}
       </nav>
-      <div className="mt-auto" />
+      <div className="mt-auto border-t border-slate-200 pt-4 text-xs text-slate-600">
+        {session?.user ? (
+          <div className="space-y-2">
+            <div className="truncate text-[11px] text-slate-500">Signed in</div>
+            <div className="truncate text-sm font-semibold text-slate-900">
+              {session.user.email ?? session.user.name ?? "User"}
+            </div>
+            <button
+              onClick={() => signOut()}
+              className="w-full border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 transition hover:border-red-300 hover:text-red-600"
+            >
+              ログアウト
+            </button>
+          </div>
+        ) : (
+          <Link
+            href="/auth/signin"
+            className="block w-full border border-slate-200 bg-white px-3 py-2 text-center text-xs text-slate-700 transition hover:border-[#2323eb]/60 hover:text-[#2323eb]"
+          >
+            ログイン
+          </Link>
+        )}
+      </div>
     </aside>
   );
 }

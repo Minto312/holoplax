@@ -1,24 +1,51 @@
 import { NextResponse } from "next/server";
+import { AuthError, requireUserId } from "../../../lib/api-auth";
 import prisma from "../../../lib/prisma";
 
 export async function GET() {
-  const current =
-    (await prisma.automationSetting.findFirst({ where: { id: 1 } })) ??
-    (await prisma.automationSetting.create({ data: { low: 35, high: 70 } }));
-  return NextResponse.json({ low: current.low, high: current.high });
+  try {
+    const userId = await requireUserId();
+    const current =
+      (await prisma.userAutomationSetting.findFirst({
+        where: { userId },
+      })) ??
+      (await prisma.userAutomationSetting.create({
+        data: { low: 35, high: 70, userId },
+      }));
+    return NextResponse.json({ low: current.low, high: current.high });
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    }
+    throw error;
+  }
 }
 
 export async function POST(request: Request) {
-  const body = await request.json();
-  const low = Number(body.low);
-  const high = Number(body.high);
-  if (!Number.isFinite(low) || !Number.isFinite(high)) {
-    return NextResponse.json({ error: "low/high are required" }, { status: 400 });
+  try {
+    const userId = await requireUserId();
+    const body = await request.json();
+    const low = Number(body.low);
+    const high = Number(body.high);
+    if (!Number.isFinite(low) || !Number.isFinite(high)) {
+      return NextResponse.json({ error: "low/high are required" }, { status: 400 });
+    }
+    const existing = await prisma.userAutomationSetting.findFirst({
+      where: { userId },
+    });
+    const saved = existing
+      ? await prisma.userAutomationSetting.update({
+          where: { id: existing.id },
+          data: { low, high },
+        })
+      : await prisma.userAutomationSetting.create({
+          data: { low, high, userId },
+        });
+    return NextResponse.json({ low: saved.low, high: saved.high });
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    }
+    throw error;
   }
-  const saved = await prisma.automationSetting.upsert({
-    where: { id: 1 },
-    update: { low, high },
-    create: { id: 1, low, high },
-  });
-  return NextResponse.json({ low: saved.low, high: saved.high });
 }

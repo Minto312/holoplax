@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { AuthError, requireUserId } from "../../../../lib/api-auth";
 import prisma from "../../../../lib/prisma";
 
 const canned = [
@@ -8,64 +9,75 @@ const canned = [
 ];
 
 export async function POST(request: Request) {
-  const body = await request.json();
-  const title: string = body.title ?? "タスク";
-  const description: string = body.description ?? "";
-  const taskId: string | null = body.taskId ?? null;
+  try {
+    const userId = await requireUserId();
+    const body = await request.json();
+    const title: string = body.title ?? "タスク";
+    const description: string = body.description ?? "";
+    const taskId: string | null = body.taskId ?? null;
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (apiKey) {
-    try {
-      const res = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [
-            { role: "system", content: "あなたはアジャイルなタスク分解のアシスタントです。" },
-            {
-              role: "user",
-              content: `タスクを短く分解し、緊急度や依存を意識した提案を1文でください: ${title}`,
-            },
-          ],
-          max_tokens: 80,
-        }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const content = data.choices?.[0]?.message?.content;
-        if (content) {
-          await prisma.aiSuggestion.create({
-            data: {
-              type: "TIP",
-              taskId,
-              inputTitle: title,
-              inputDescription: description,
-              output: content,
-            },
-          });
-          return NextResponse.json({ suggestion: content });
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (apiKey) {
+      try {
+        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [
+              { role: "system", content: "あなたはアジャイルなタスク分解のアシスタントです。" },
+              {
+                role: "user",
+                content: `タスクを短く分解し、緊急度や依存を意識した提案を1文でください: ${title}`,
+              },
+            ],
+            max_tokens: 80,
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const content = data.choices?.[0]?.message?.content;
+          if (content) {
+            await prisma.aiSuggestion.create({
+              data: {
+                type: "TIP",
+                taskId,
+                inputTitle: title,
+                inputDescription: description,
+                output: content,
+                userId,
+              },
+            });
+            return NextResponse.json({ suggestion: content });
+          }
         }
+      } catch {
+        // fall back to canned
       }
-    } catch {
-      // fall back to canned
     }
-  }
 
-  const pick = canned[Math.floor(Math.random() * canned.length)];
-  await prisma.aiSuggestion.create({
-    data: {
-      type: "TIP",
-      taskId,
-      inputTitle: title,
-      inputDescription: description,
-      output: pick,
-    },
-  });
-  return NextResponse.json({
-    suggestion: `${title} のAI提案: ${pick}`,
-  });
+    const pick = canned[Math.floor(Math.random() * canned.length)];
+    await prisma.aiSuggestion.create({
+      data: {
+        type: "TIP",
+        taskId,
+        inputTitle: title,
+        inputDescription: description,
+        output: pick,
+        userId,
+      },
+    });
+    return NextResponse.json({
+      suggestion: `${title} のAI提案: ${pick}`,
+    });
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    }
+    console.error("POST /api/ai/suggest error", error);
+    return NextResponse.json({ error: "failed to generate suggestion" }, { status: 500 });
+  }
 }
