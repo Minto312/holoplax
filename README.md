@@ -4,7 +4,7 @@
 - Next.js 16 / React 19
 - Postgres（docker compose で起動）
 - MinIO（S3 互換、docker compose で起動）
-- NextAuth（認証予定）
+- NextAuth（Email / Google / GitHub）
 - OpenAI（`OPENAI_API_KEY` を `.env` に設定）
 
 ## すぐ使う（DB/バケットは Docker、Next はホスト）
@@ -25,4 +25,5 @@
 - `DATABASE_URL` はホストからは `localhost:5433`（コンテナ内は `db:5432`）。NextAuth 用に `NEXTAUTH_SECRET` を設定してから起動する。
 - MinIO のエンドポイントはホストから `http://localhost:9000` を使う。
 - OpenAI を使うときは `.env` に `OPENAI_API_KEY` を設定する（キーはコミットしないこと）。
+- NextAuth のプロバイダは `.env` に `EMAIL_SERVER` / `EMAIL_FROM` / `GOOGLE_CLIENT_ID` / `GITHUB_ID` などを設定する。
 - Prisma マイグレーション: `DATABASE_URL=postgresql://holoplax:holoplax@localhost:5433/holoplax npx prisma migrate dev --name init`
