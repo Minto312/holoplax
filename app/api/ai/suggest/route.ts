@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import prisma from "../../../../lib/prisma";
 
 const canned = [
   "小さく分けて今日30分以内に終わる粒度にしてください。",
@@ -9,6 +10,8 @@ const canned = [
 export async function POST(request: Request) {
   const body = await request.json();
   const title: string = body.title ?? "タスク";
+  const description: string = body.description ?? "";
+  const taskId: string | null = body.taskId ?? null;
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (apiKey) {
@@ -35,6 +38,15 @@ export async function POST(request: Request) {
         const data = await res.json();
         const content = data.choices?.[0]?.message?.content;
         if (content) {
+          await prisma.aiSuggestion.create({
+            data: {
+              type: "TIP",
+              taskId,
+              inputTitle: title,
+              inputDescription: description,
+              output: content,
+            },
+          });
           return NextResponse.json({ suggestion: content });
         }
       }
@@ -44,6 +56,15 @@ export async function POST(request: Request) {
   }
 
   const pick = canned[Math.floor(Math.random() * canned.length)];
+  await prisma.aiSuggestion.create({
+    data: {
+      type: "TIP",
+      taskId,
+      inputTitle: title,
+      inputDescription: description,
+      output: pick,
+    },
+  });
   return NextResponse.json({
     suggestion: `${title} のAI提案: ${pick}`,
   });

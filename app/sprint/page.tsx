@@ -1,5 +1,6 @@
 "use client";
 
+import { Pencil, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Sidebar } from "../components/sidebar";
 import { TASK_STATUS, TaskDTO } from "../../lib/types";
@@ -8,6 +9,14 @@ export default function SprintPage() {
   const capacity = 24;
   const [items, setItems] = useState<TaskDTO[]>([]);
   const [newItem, setNewItem] = useState({ title: "", description: "", points: 1 });
+  const [editItem, setEditItem] = useState<TaskDTO | null>(null);
+  const [editForm, setEditForm] = useState({
+    title: "",
+    description: "",
+    points: 1,
+    urgency: "中",
+    risk: "中",
+  });
 
   const fetchTasks = useCallback(async () => {
     const res = await fetch("/api/tasks");
@@ -54,6 +63,40 @@ export default function SprintPage() {
     fetchTasks();
   };
 
+  const deleteItem = async (id: string) => {
+    if (!window.confirm("このタスクを削除しますか？")) return;
+    await fetch(`/api/tasks/${id}`, { method: "DELETE" });
+    fetchTasks();
+  };
+
+  const openEdit = (item: TaskDTO) => {
+    setEditItem(item);
+    setEditForm({
+      title: item.title,
+      description: item.description ?? "",
+      points: item.points,
+      urgency: item.urgency,
+      risk: item.risk,
+    });
+  };
+
+  const saveEdit = async () => {
+    if (!editItem) return;
+    await fetch(`/api/tasks/${editItem.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: editForm.title.trim(),
+        description: editForm.description.trim(),
+        points: Number(editForm.points),
+        urgency: editForm.urgency,
+        risk: editForm.risk,
+      }),
+    });
+    setEditItem(null);
+    fetchTasks();
+  };
+
   return (
     <div className="mx-auto flex min-h-screen max-w-7xl gap-6 px-4 py-10 lg:px-6 lg:py-14">
       <Sidebar splitThreshold={8} />
@@ -96,7 +139,7 @@ export default function SprintPage() {
               onChange={(e) => setNewItem((p) => ({ ...p, description: e.target.value }))}
               placeholder="概要（任意）"
               rows={2}
-              className="w-full border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none focus:border-[#2323eb]"
+              className="w-full border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none focus:border-[#2323eb] sm:col-span-2"
             />
             <div className="flex items-center gap-2">
               <input
@@ -141,11 +184,91 @@ export default function SprintPage() {
                   >
                     完了
                   </button>
+                  <button
+                    onClick={() => openEdit(item)}
+                    className="border border-slate-200 bg-white p-1 text-slate-700 transition hover:border-[#2323eb]/50 hover:text-[#2323eb]"
+                    aria-label="編集"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                  <button
+                    onClick={() => deleteItem(item.id)}
+                    className="border border-slate-200 bg-white p-1 text-slate-700 transition hover:border-red-300 hover:text-red-600"
+                    aria-label="削除"
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               </div>
             ))}
           </div>
         </section>
+
+        {editItem ? (
+          <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/20 px-4">
+            <div className="w-full max-w-lg border border-slate-200 bg-white p-6 shadow-lg">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-slate-900">タスクを編集</h3>
+                <button
+                  onClick={() => setEditItem(null)}
+                  className="text-sm text-slate-500 transition hover:text-slate-800"
+                >
+                  閉じる
+                </button>
+              </div>
+              <div className="mt-4 grid gap-3">
+                <input
+                  value={editForm.title}
+                  onChange={(e) => setEditForm((p) => ({ ...p, title: e.target.value }))}
+                  placeholder="タスク名"
+                  className="w-full border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none focus:border-[#2323eb]"
+                />
+                <textarea
+                  value={editForm.description}
+                  onChange={(e) => setEditForm((p) => ({ ...p, description: e.target.value }))}
+                  placeholder="概要（任意）"
+                  rows={3}
+                  className="w-full border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none focus:border-[#2323eb]"
+                />
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <input
+                    type="number"
+                    min={1}
+                    value={editForm.points}
+                    onChange={(e) =>
+                      setEditForm((p) => ({ ...p, points: Number(e.target.value) || 0 }))
+                    }
+                    className="w-full border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none focus:border-[#2323eb]"
+                  />
+                  <select
+                    value={editForm.urgency}
+                    onChange={(e) => setEditForm((p) => ({ ...p, urgency: e.target.value }))}
+                    className="w-full border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none focus:border-[#2323eb]"
+                  >
+                    {["低", "中", "高"].map((v) => (
+                      <option key={v}>{v}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={editForm.risk}
+                    onChange={(e) => setEditForm((p) => ({ ...p, risk: e.target.value }))}
+                    className="w-full border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none focus:border-[#2323eb]"
+                  >
+                    {["低", "中", "高"].map((v) => (
+                      <option key={v}>{v}</option>
+                    ))}
+                  </select>
+                </div>
+                <button
+                  onClick={saveEdit}
+                  className="bg-[#2323eb] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md hover:shadow-[#2323eb]/30"
+                >
+                  変更を保存
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </main>
     </div>
   );

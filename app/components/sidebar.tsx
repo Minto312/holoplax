@@ -55,11 +55,7 @@ export function Sidebar({ splitThreshold }: SidebarProps) {
           </Link>
         ))}
       </nav>
-      {splitThreshold ? (
-        <div className="mt-auto border-t border-slate-200 pt-4 text-xs text-slate-600">
-          スプリント上限 <span className="font-semibold">{splitThreshold}pt</span>
-        </div>
-      ) : null}
+      <div className="mt-auto" />
     </aside>
   );
 }

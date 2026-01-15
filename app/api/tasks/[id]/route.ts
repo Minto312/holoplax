@@ -4,9 +4,9 @@ import { TASK_STATUS } from "../../../../lib/types";
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const { id } = params;
+  const { id } = await params;
   const body = await request.json();
   const data: Record<string, unknown> = {};
 
@@ -25,7 +25,23 @@ export async function PATCH(
       data,
     });
     return NextResponse.json({ task: updated });
-  } catch {
-    return NextResponse.json({ error: "not found" }, { status: 404 });
+  } catch (error) {
+    console.error("PATCH /api/tasks/[id] error", error);
+    return NextResponse.json({ error: "not found or update failed" }, { status: 404 });
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  try {
+    await prisma.aiSuggestion.deleteMany({ where: { taskId: id } });
+    await prisma.task.delete({ where: { id } });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("DELETE /api/tasks/[id] error", error);
+    return NextResponse.json({ error: "not found or delete failed" }, { status: 404 });
   }
 }
